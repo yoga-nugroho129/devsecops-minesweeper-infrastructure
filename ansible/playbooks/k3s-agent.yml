@@ -1,0 +1,28 @@
+---
+- name: Install and configure K3s agent
+  hosts: kubernetes_worker
+  become: true
+
+  tasks:
+    - name: Validate K3s enviroment variables
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'K3S_URL') | length > 0
+          - lookup('env', 'K3S_NODE_TOKEN') | length > 0
+        fail_msg: 'K3S_URL or K3S_NODE_TOKEN is missing'
+      no_log: true
+
+    - name: Download and Install K3s agent
+      ansible.builtin.shell:
+        cmd: curl -sfL https://get.k3s.io | sh -
+        creates: /usr/local/bin/k3s
+      environment:
+        K3S_URL: "{{ lookup('env', 'K3S_URL') }}"
+        K3S_TOKEN: "{{ lookup('env', 'K3S_NODE_TOKEN') }}"
+      no_log: true
+
+    - name: Ensure K3s Agent is running and enabled
+      ansible.builtin.service:
+        name: k3s-agent
+        state: started
+        enabled: true
