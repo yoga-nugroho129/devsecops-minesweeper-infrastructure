@@ -1,0 +1,16 @@
+---
+- name: Install K3s server
+  hosts: kubernetes_control
+  become: true
+
+  tasks:
+    - name: Download and Install K3s
+      ansible.builtin.shell:
+        cmd: curl -sfL https://get.k3s.io | sh -
+        creates: /usr/local/bin/k3s
+
+    - name: Ensure K3s server is running
+      ansible.builtin.service:
+        name: k3s
+        state: started
+        enabled: true
