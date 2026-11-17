@@ -12,19 +12,12 @@
       changed_when: false
       no_log: true
 
-    - name: Validate K3s enviroment variables
-      ansible.builtin.assert:
-        that:
-          - lookup('env', 'K3S_URL') | length > 0
-        fail_msg: 'K3S_URL is missing'
-      no_log: true
-
     - name: Download and Install K3s agent
       ansible.builtin.shell:
         cmd: curl -sfL https://get.k3s.io | sh -
-        creates: /usr/local/bin/k3s-agent.service
+        creates: /etc/systemd/system/k3s-agent.service
       environment:
-        K3S_URL: "{{ lookup('env', 'K3S_URL') }}"
+        K3S_URL: 'https://10.3.8.25:6443'
         K3S_TOKEN: '{{ k3s_node_token.stdout }}'
       no_log: true
 
