@@ -4,12 +4,47 @@
   become: true
 
   tasks:
-    - name: Update apt package index
+    - name: Install Docker repository dependencies
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+        update_cache: true
+
+    - name: Create APT keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add official Docker APT repository
+      ansible.builtin.deb822_repository:
+        name: docker
+        types:
+          - deb
+        uris:
+          - https://download.docker.com/linux/ubuntu
+        suites:
+          - noble
+        components:
+          - stable
+        architectures:
+          - amd64
+        signed_by: /etc/apt/keyrings/docker.asc
+        state: present
+
+    - name: Update APT cache after adding docker repository
       ansible.builtin.apt:
         update_cache: true
-        cache_valid_time: 36000
 
-    - name: Install Docker Engine
+    - name: Install Docker Engine and plugins
       ansible.builtin.apt:
         name:
           - docker-ce
