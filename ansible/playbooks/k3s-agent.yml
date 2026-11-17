@@ -4,21 +4,28 @@
   become: true
 
   tasks:
+    - name: Retreieve K3s node token from server
+      ansible.builtin.command:
+        cmd: cat /var/lib/rancher/k3s/server/node-token
+      delegate_to: "{{ groups['kubernetes_control'][0] }}"
+      register: k3s_node_token
+      changed_when: false
+      no_log: true
+
     - name: Validate K3s enviroment variables
       ansible.builtin.assert:
         that:
           - lookup('env', 'K3S_URL') | length > 0
-          - lookup('env', 'K3S_NODE_TOKEN') | length > 0
-        fail_msg: 'K3S_URL or K3S_NODE_TOKEN is missing'
+        fail_msg: 'K3S_URL is missing'
       no_log: true
 
     - name: Download and Install K3s agent
       ansible.builtin.shell:
         cmd: curl -sfL https://get.k3s.io | sh -
-        creates: /usr/local/bin/k3s
+        creates: /usr/local/bin/k3s-agent.service
       environment:
         K3S_URL: "{{ lookup('env', 'K3S_URL') }}"
-        K3S_TOKEN: "{{ lookup('env', 'K3S_NODE_TOKEN') }}"
+        K3S_TOKEN: '{{ k3s_node_token.stdout }}'
       no_log: true
 
     - name: Ensure K3s Agent is running and enabled
