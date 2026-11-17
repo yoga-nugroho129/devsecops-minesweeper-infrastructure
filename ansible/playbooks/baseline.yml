@@ -1,0 +1,22 @@
+---
+- name: Configure for all servers
+  hosts: production
+  become: true
+
+  tasks:
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Upgrade installed packages
+      ansible.builtin.apt:
+        upgrade: safe
+
+    - name: Install essential packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - git
+          - ca-certificates
+        state: present
