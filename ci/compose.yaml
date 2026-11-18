@@ -1,0 +1,94 @@
+name: devsecops-ci
+
+services:
+  postgres:
+    image: postgres:17.12-alpine
+    platform: linux/amd64
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB?:POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER?:POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?:POSTGRES_PASSWORD is required}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+    networks:
+      - ci-network
+
+  sonarqube:
+    image: sonarqube:26.11.0.134175-community
+    platform: linux/amd64
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      SONAR_JDBC_URL: ${SONAR_JDBC_URL:?SONAR_JDBC_URL is required}
+      SONAR_JDBC_USERNAME: ${SONAR_JDBC_USERNAME:?SONAR_JDBC_USERNAME is required}
+      SONAR_JDBC_PASSWORD: ${SONAR_JDBC_PASSWORD:?SONAR_JDBC_PASSWORD is required}
+
+    ports:
+      - '127.0.0.1:9000:9000'
+
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+
+    ulimits:
+      nofile:
+        soft: 131072
+        hard: 131072
+      nproc: 8192
+
+    networks:
+      - ci-network
+
+  jenkins:
+    image: jenkins/jenkins:2.591-jdk21
+    platform: linux/amd64
+    restart: unless-stopped
+
+    environment:
+      JAVA_OPTS: '-Djava.awt.headless=true -Xms256m -Xmx512m'
+
+    ports:
+      - '127.0.0.1:8080:8080'
+
+    expose:
+      - '50000'
+
+    group_add:
+      - '988'
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - ci-network
+
+volumes:
+  postgres_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  jenkins_home:
+
+networks:
+  ci-network:
+    name: devsecops-ci-network
+    driver: bridge
