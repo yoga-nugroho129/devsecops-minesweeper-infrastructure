@@ -57,36 +57,11 @@ services:
     networks:
       - ci-network
 
-  jenkins:
-    image: jenkins/jenkins:2.591-jdk21
-    platform: linux/amd64
-    restart: unless-stopped
-
-    environment:
-      JAVA_OPTS: '-Djava.awt.headless=true -Xms256m -Xmx512m'
-
-    ports:
-      - '127.0.0.1:8080:8080'
-
-    expose:
-      - '50000'
-
-    group_add:
-      - '988'
-
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-
-    networks:
-      - ci-network
-
 volumes:
   postgres_data:
   sonarqube_data:
   sonarqube_extensions:
   sonarqube_logs:
-  jenkins_home:
 
 networks:
   ci-network:
