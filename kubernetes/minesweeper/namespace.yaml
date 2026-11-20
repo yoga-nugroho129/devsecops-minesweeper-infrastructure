@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+
+metadata:
+  name: minesweeper
+
+  labels:
+    app.kubernetes.io/name: minesweeper
+    app.kubernetes.io/part-of: devsecops-minesweeper
