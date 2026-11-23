@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 
 metadata:
@@ -20,7 +20,7 @@ spec:
         app: minesweeper
 
     spec:
-      container:
+      containers:
         - name: minesweeper
           image: docker.io/yoganugroho129/devsecops-minesweeper:12
           imagePullPolicy: IfNotPresent
@@ -42,16 +42,16 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySecond: 5
-            periodSecond: 10
-            timeoutSecond: 2
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
             failureThreshold: 3
 
           livenessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySecond: 15
-            periodSecond: 20
-            timeoutSecond: 2
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
             failureThreshold: 3
